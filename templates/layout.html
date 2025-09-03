@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hamza's First Web-Store</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#fdfdfd; color:#333; }
+    header, footer { background:#222; color:#fff; padding:15px; text-align:center; }
+    nav a { color:#fff; margin:0 15px; text-decoration:none; font-weight:bold; }
+    nav a:hover { color:#760feb; }
+    .container { padding:20px; max-width:1200px; margin:auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hamza's First Web-Store</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/shop">Shop</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer>
+    <p>© 2025 Hamza's First Web-Store</p>
+  </footer>
+</body>
+</html>

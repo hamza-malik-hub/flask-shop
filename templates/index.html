@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+  <!-- Hero Section -->
+  <div style="position: relative; width: 100%; height: 350px; margin-bottom:30px; overflow:hidden; border-radius:12px;">
+    <img src="{{ url_for('static', filename='images/banner.webp') }}" 
+         alt="Banner" 
+         style="width:100%; height:100%; object-fit:cover;">
+    <div style="position:absolute; top:0; left:0; right:0; bottom:0; 
+                background:rgba(14, 13, 13, 0.4); display:flex; 
+                align-items:center; justify-content:center; flex-direction:column; color:white;">
+      <h2 style="font-size:2rem; margin:0;">Welcome to Hamza's Store</h2>
+      <p style="margin-top:10px;">Your style, your fashion, your store.</p>
+      <a href="/shop" 
+         style="margin-top:15px; background:#540adf; color:white; 
+                padding:10px 20px; border-radius:6px; text-decoration:none; 
+                font-weight:bold; transition:all 0.3s ease;"
+         onmouseover="this.style.background='#e65c00'; this.style.transform='scale(1.05)';"
+         onmouseout="this.style.background='#ff6600'; this.style.transform='scale(1)';">
+        Shop Now
+      </a>
+    </div>
+  </div>
+
+  <!-- Showcase Grid -->
+  <h2 style="text-align:center; margin-bottom:20px;">Featured Collections</h2>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
+    <div class="collection-card" 
+         style="background:hwb(0 65% 33%); border-radius:10px; overflow:hidden; 
+                box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; 
+                transition:transform 0.3s, box-shadow 0.3s;">
+      <div style="width:100%; height:220px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <img src="{{ url_for('static', filename='images/buttonup2.jpeg') }}" alt="Shirts" style="max-width:100%; max-height:100%; object-fit:contain;">
+      </div>
+      <h3 style="padding:10px;">Trendy Shirts</h3>
+    </div>
+
+    <div class="collection-card" 
+         style="background:rgb(166, 167, 163); border-radius:10px; overflow:hidden; 
+                box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; 
+                transition:transform 0.3s, box-shadow 0.3s;">
+      <div style="width:100%; height:220px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <img src="{{ url_for('static', filename='images/bluejeans.jpeg') }}" alt="Jeans" style="max-width:100%; max-height:100%; object-fit:contain;">
+      </div>
+      <h3 style="padding:10px;">Classic Jeans</h3>
+    </div>
+
+    <div class="collection-card" 
+         style="background:rgb(159, 160, 156); border-radius:10px; overflow:hidden; 
+                box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; 
+                transition:transform 0.3s, box-shadow 0.3s;">
+      <div style="width:100%; height:220px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <img src="{{ url_for('static', filename='images/airforceshoes.jpeg') }}" alt="Shoes" style="max-width:100%; max-height:100%; object-fit:contain;">
+      </div>
+      <h3 style="padding:10px;">Stylish Shoes</h3>
+    </div>
+  </div>
+
+  <!-- Hover Effect Script -->
+  <script>
+    document.querySelectorAll('.collection-card').forEach(card => {
+      card.addEventListener('mouseover', () => {
+        card.style.transform = 'scale(1.05)';
+        card.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2)';
+      });
+      card.addEventListener('mouseout', () => {
+        card.style.transform = 'scale(1)';
+        card.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
+      });
+    });
+  </script>
+
+{% endblock %}

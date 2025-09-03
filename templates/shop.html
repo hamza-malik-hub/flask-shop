@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+.shop-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Make product cards responsive */
+@media (max-width: 768px) {
+    .shop-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        padding: 10px;
+    }
+    .product-card img {
+        height: auto;
+        max-height: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .shop-container {
+        grid-template-columns: 1fr; /* stack items on very small screens */
+    }
+    .product-card {
+        padding: 10px;
+    }
+    .product-card h3 {
+        font-size: 16px;
+    }
+    .product-card p {
+        font-size: 14px;
+    }
+}
+
+.product-card {
+    background: #c4bc54;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.product-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+    cursor: zoom-in;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.product-card:hover img {
+    transform: scale(1.05);
+}
+
+.product-card h3 {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+.product-card p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.btn, .show-cart-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #faf9f8;
+    color: rgb(14, 13, 13);
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.btn:hover, .show-cart-btn:hover {
+    background: #0056b3;
+}
+
+input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Category Filter Buttons */
+.filter-buttons {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.filter-buttons a {
+    margin: 5px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    background: #767771;
+    color: white;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+.filter-buttons a:hover {
+    background: #0056b3;
+}
+.filter-buttons .active {
+    background: #dd1010;
+}
+
+/* Image Preview Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+}
+.modal img {
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+}
+.modal:target {
+    display: flex;
+}
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 30px;
+    text-decoration: none;
+}
+</style>
+
+<!-- Show Cart Button -->
+<div style="text-align: center; margin-bottom: 20px;">
+    <a href="{{ url_for('view_cart') }}" class="show-cart-btn">🛒 Show Cart</a>
+</div>
+
+<!-- Category Filter Buttons (dynamic) -->
+<div class="filter-buttons">
+    <a href="{{ url_for('shop') }}" class="{% if not selected_category %}active{% endif %}">All</a>
+    {% for cat in categories %}
+        <a href="{{ url_for('shop', category=cat) }}" class="{% if selected_category == cat %}active{% endif %}">{{ cat }}</a>
+    {% endfor %}
+</div>
+
+<!-- Product Grid -->
+<div class="shop-container" id="shop-container">
+    {% for product in products %}
+    <div class="product-card" data-category="{{ product.category }}">
+        <!-- Clickable image with modal link -->
+        <a href="#img{{ product.id }}">
+            <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+        </a>
+        <h3>{{ product.name }}</h3>
+        <p>${{ product.price }}</p>
+        <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+            <input type="number" name="quantity" value="1" min="1">
+            <button type="submit" class="btn">Add to Cart</button>
+        </form>
+    </div>
+
+    <!-- Modal for image preview -->
+    <div id="img{{ product.id }}" class="modal">
+        <a href="#" class="modal-close">&times;</a>
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

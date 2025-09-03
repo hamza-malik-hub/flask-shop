@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container" style="max-width: 800px; margin: auto; padding: 20px;">
+    <h2>Payment Summary</h2>
+    {% if cart %}
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #f2f2f2;">
+            <th style="text-align:left; padding: 10px;">Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+        </tr>
+        {% for item in cart %}
+        <tr>
+            <td style="padding: 10px 0;">{{ item.name }}</td>
+            <td>${{ item.price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ '%.2f'|format(item.price * item.quantity) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <h3 style="margin-top: 20px;">Total: ${{ '%.2f'|format(total) }}</h3>
+
+    <h3>Select Payment Method:</h3>
+    <ul style="list-style: none; padding: 0;">
+        <li>💳 Credit/Debit Card</li>
+        <li>🌐 Online Banking</li>
+        <li>💵 Cash on Delivery</li>
+    </ul>
+
+    <!-- Just a button that goes back or confirms -->
+    <a href="{{ url_for('home') }}" class="btn btn-primary">Confirm Payment</a>
+
+    {% else %}
+    <p>Your cart is empty.</p>
+    {% endif %}
+</div>
+{% endblock %}

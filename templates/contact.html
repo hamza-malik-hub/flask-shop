@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+  <style>
+    .contact-section {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      text-align: center;
+    }
+    .contact-section h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #ff7b00;
+    }
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .contact-form input, 
+    .contact-form textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .contact-form button {
+      padding: 10px;
+      border: none;
+      background: #ca7d18;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    .contact-form button:hover {
+      background: #f50e0e;
+    }
+    .whatsapp {
+      margin-top: 25px;
+      font-size: 1.1rem;
+    }
+    .whatsapp a {
+      color: green;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .whatsapp a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <div class="contact-section">
+    <h2>Contact Us</h2>
+    <p>We’d love to hear from you! Fill out the form below 👇</p>
+
+    <form class="contact-form">
+      <input type="text" placeholder="Your Name" required>
+      <input type="email" placeholder="Your Email" required>
+      <textarea rows="5" placeholder="Your Message" required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+
+    <!-- WhatsApp Contact -->
+    <div class="whatsapp">
+      <p>You can also directly contact us on our WhatsApp:  
+        <a href="https://wa.me/923259743428" target="_blank">+92 325 9743428</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

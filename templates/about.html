@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+  <style>
+    .about-section {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      font-size: 1.2rem;   /* Bigger text */
+      line-height: 1.8;    /* More spacing */
+      text-align: center;
+    }
+    .about-section h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #3f19e7;      /* Highlight heading */
+    }
+  </style>
+
+  <div class="about-section">
+    <h2>About Us</h2>
+    <p>
+      Welcome to Hamza's First Web-Store! 🎉  
+      This project is my first step into creating a professional online shop using Flask.  
+      I built this store to practice web development, showcase products, and learn real-world e-commerce structure.
+    </p>
+
+    <p>
+      Here you’ll find a variety of collections — shirts, jeans, shoes, and more.  
+      Stay tuned as I expand this site with more features!
+    </p>
+  </div>
+{% endblock %}
