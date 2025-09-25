@@ -1,121 +1,153 @@
 from flask import Flask, render_template, session, redirect, url_for, request
-from collections import defaultdict
+from flask_sqlalchemy import SQLAlchemy
+import os
 
+# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# Product list with categories
-global_products = [
-    # Shirts
-    {"id": 1, "name": "Classic T-Shirt", "price": 15.99, "image": "tshirtblack.jpeg", "category": "Shirts"},
-    {"id": 15, "name": "White T-Shirt", "price": 18.99, "image": "shirt.jpeg", "category": "Shirts"},
-    {"id": 16, "name": "Print T-shirt", "price": 22.67, "image": "product1.jpeg", "category": "Shirts"},
-    {"id": 8, "name": "Polo Black Shirt", "price": 19.99, "image": "poloblack.jpeg", "category": "Shirts"},
-    {"id": 9, "name": "Button-up", "price": 22.99, "image": "buttonup1.jpeg", "category": "Shirts"},
-    {"id": 10, "name": "Button-up Black", "price": 22.99, "image": "buttonup2.jpeg", "category": "Shirts"},
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-    # Jackets
-    {"id": 19, "name": "Leather Jacket", "price": 98.77, "image": "product4.jpeg", "category": "Jackets"},
+# Database config
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./shop.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Jeans
-    {"id": 2, "name": "Blue Jeans", "price": 39.99, "image": "bluejeans.jpeg", "category": "Jeans"},
-    {"id": 3, "name": "Stylish Jeans", "price": 42.99, "image": "jeans.jpeg", "category": "Jeans"},
-    {"id": 17, "name": "Black Jeans", "price": 33.90, "image": "product2.jpeg", "category": "Jeans"},
+# Initialize DB
+db = SQLAlchemy(app)
 
-    # Pants
-    {"id": 6, "name": "Cargo Black Pants", "price": 34.99, "image": "cargoblack.jpeg", "category": "Pants"},
-    {"id": 7, "name": "Cargo Brown Pants", "price": 34.99, "image": "cargobrown.jpeg", "category": "Pants"},
+# ---------------- Models ----------------
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    image = db.Column(db.String(100), nullable=False)
+    stock = db.Column(db.Integer, default=10)
 
-    # Shoes
-    {"id": 18, "name": "Sports Shoes Black", "price": 65.70, "image": "product3.jpeg", "category": "Shoes"},
-    {"id": 4, "name": "Sports Shoes White", "price": 59.99, "image": "shoes.jpeg", "category": "Shoes"},
-    {"id": 5, "name": "Airforce Shoes", "price": 64.99, "image": "airforceshoes.jpeg", "category": "Shoes"},
-    {"id": 11, "name": "Brown Chelsea Boots", "price": 74.99, "image": "brownchelsea.jpeg", "category": "Shoes"},
-    {"id": 12, "name": "Black Chelsea Boots", "price": 74.99, "image": "blackchelsea.jpeg", "category": "Shoes"},
-    {"id": 13, "name": "Leather Shoes", "price": 84.99, "image": "leathershoes.jpeg", "category": "Shoes"},
-    {"id": 14, "name": "Leather Shoes Brown", "price": 84.99, "image": "leathershoesbrown.jpeg", "category": "Shoes"},
-]
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    customer_name = db.Column(db.String(100), nullable=False)
+    customer_email = db.Column(db.String(100), nullable=False)
+    customer_address = db.Column(db.String(200), nullable=False)
 
-
+# ---------------- Routes ----------------
 @app.route('/')
 def home():
     return render_template('index.html')
 
 @app.route("/shop")
 def shop():
-    category = request.args.get("category")  # get selected category from URL
-
-    # If a category is chosen, filter products
+    category = request.args.get("category")
     if category:
-        filtered_products = [p for p in global_products if p["category"] == category]
+        filtered_products = Product.query.filter_by(category=category).all()
     else:
-        filtered_products = global_products  # show all if no filter
+        filtered_products = Product.query.all()
+    categories = sorted(set([p.category for p in Product.query.all()]))
+    return render_template("shop.html", products=filtered_products, categories=categories, selected_category=category)
 
-    # Get all categories for dropdown
-    categories = sorted(set([p["category"] for p in global_products]))
-
-    return render_template(
-        "shop.html",
-        products=filtered_products,
-        categories=categories,
-        selected_category=category
-    )
-
-
+# ---------------- Cart Routes ----------------
 @app.route('/add-to-cart/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
     cart = session.get('cart', [])
-
-    # Quantity from form
     try:
         quantity = int(request.form.get('quantity', 1))
     except ValueError:
         quantity = 1
 
-    # Get product info
-    product = next((p for p in global_products if p["id"] == product_id), None)
-
+    product = Product.query.get(product_id)
     if product:
         found = False
         for item in cart:
-            if isinstance(item, dict) and item["id"] == product_id:
+            if item["id"] == product_id:
                 item["quantity"] += quantity
                 found = True
                 break
         if not found:
             cart.append({
-                "id": product["id"],
-                "name": product["name"],
-                "price": product["price"],
-                "quantity": quantity
+                "id": product.id,
+                "name": product.name,
+                "price": product.price,
+                "quantity": quantity,
+                "stock": product.stock  # <- This is required
             })
 
     session['cart'] = cart
     session.modified = True
-
     return redirect(url_for('shop'))
+
 
 @app.route('/cart')
 def view_cart():
-    raw_cart = session.get('cart', [])
-    cart = [item for item in raw_cart if isinstance(item, dict)]
+    cart = session.get('cart', [])
     total = sum(item["price"] * item["quantity"] for item in cart)
     return render_template("cart.html", cart=cart, total=total)
 
-@app.route('/payment')
-def payment():
-    raw_cart = session.get('cart', [])
-    cart = [item for item in raw_cart if isinstance(item, dict)]
-    if not cart:
-        return redirect(url_for('shop'))
-    total = sum(item["price"] * item["quantity"] for item in cart)
-    return render_template("payment.html", cart=cart, total=total)
+@app.route('/remove-from-cart/<int:product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    cart = session.get('cart', [])
+    cart = [item for item in cart if item["id"] != product_id]
+    session['cart'] = cart
+    session.modified = True
+    return redirect(url_for('view_cart'))
+
+@app.route('/update-cart/<int:product_id>', methods=['POST'])
+def update_cart(product_id):
+    cart = session.get('cart', [])
+    try:
+        quantity = int(request.form.get('quantity', 1))
+    except ValueError:
+        quantity = 1
+    for item in cart:
+        if item["id"] == product_id:
+            item["quantity"] = min(quantity, item["stock"])
+            break
+    session['cart'] = cart
+    session.modified = True
+    return redirect(url_for('view_cart'))
 
 @app.route('/clear-cart')
 def clear_cart():
     session.pop('cart', None)
     return redirect(url_for('shop'))
 
+# ---------------- Payment ----------------
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    cart = session.get('cart', [])
+    if not cart:
+        return redirect(url_for('shop'))
+
+    total = sum(item["price"] * item["quantity"] for item in cart)
+
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        address = request.form['address']
+
+        for item in cart:
+            new_order = Order(
+                product_id=item["id"],
+                quantity=item["quantity"],
+                customer_name=name,
+                customer_email=email,
+                customer_address=address
+            )
+            db.session.add(new_order)
+
+            product = Product.query.get(item["id"])
+            if product:
+                product.stock -= item["quantity"]
+
+        db.session.commit()
+        session.pop('cart', None)
+        return redirect(url_for('shop'))
+
+    return render_template("payment.html", cart=cart, total=total)
+
+# ---------------- Other Pages ----------------
 @app.route('/about')
 def about():
     return render_template('about.html')
@@ -124,7 +156,52 @@ def about():
 def contact():
     return render_template('contact.html')
 
+# ---------------- Admin Routes ----------------
+@app.route('/admin')
+def admin_dashboard():
+    products = Product.query.all()
+    orders = Order.query.all()
+    return render_template('admin_dashboard.html', products=products, orders=orders)
 
+@app.route('/admin/add-product', methods=['GET', 'POST'])
+def add_product():
+    if request.method == 'POST':
+        name = request.form['name']
+        price = float(request.form['price'])
+        category = request.form['category']
+        stock = int(request.form['stock'])
 
+        file = request.files['image']
+        if file:
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(image_path)
+            image = "uploads/" + file.filename
+        else:
+            image = "default.jpg"
+
+        new_product = Product(name=name, price=price, category=category, stock=stock, image=image)
+        db.session.add(new_product)
+        db.session.commit()
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_product.html')
+
+@app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    try:
+        if product.image and product.image != "default.jpg":
+            image_path = os.path.join(app.root_path, 'static', product.image)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+    except Exception as e:
+        print("Error deleting image:", e)
+    db.session.delete(product)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+# ---------------- Main ----------------
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

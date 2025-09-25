@@ -169,7 +169,7 @@ input[type="number"] {
     <div class="product-card" data-category="{{ product.category }}">
         <!-- Clickable image with modal link -->
         <a href="#img{{ product.id }}">
-            <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+            <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
         </a>
         <h3>{{ product.name }}</h3>
         <p>${{ product.price }}</p>
@@ -182,7 +182,7 @@ input[type="number"] {
     <!-- Modal for image preview -->
     <div id="img{{ product.id }}" class="modal">
         <a href="#" class="modal-close">&times;</a>
-        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+        <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
     </div>
     {% endfor %}
 </div>
