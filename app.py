@@ -2,18 +2,18 @@ from flask import Flask, render_template, session, redirect, url_for, request
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Database config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./shop.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize DB
 db = SQLAlchemy(app)
 
 # ---------------- Models ----------------
@@ -41,12 +41,22 @@ def home():
 @app.route("/shop")
 def shop():
     category = request.args.get("category")
+    keyword = request.args.get("search")
+
+    products_query = Product.query
     if category:
-        filtered_products = Product.query.filter_by(category=category).all()
-    else:
-        filtered_products = Product.query.all()
+        products_query = products_query.filter_by(category=category)
+    if keyword:
+        products_query = products_query.filter(Product.name.ilike(f"%{keyword}%"))
+
+    filtered_products = products_query.all()
     categories = sorted(set([p.category for p in Product.query.all()]))
-    return render_template("shop.html", products=filtered_products, categories=categories, selected_category=category)
+
+    return render_template("shop.html",
+                           products=filtered_products,
+                           categories=categories,
+                           selected_category=category,
+                           search_keyword=keyword)
 
 # ---------------- Cart Routes ----------------
 @app.route('/add-to-cart/<int:product_id>', methods=['POST'])
@@ -63,6 +73,8 @@ def add_to_cart(product_id):
         for item in cart:
             if item["id"] == product_id:
                 item["quantity"] += quantity
+                if item["quantity"] > product.stock:
+                    item["quantity"] = product.stock
                 found = True
                 break
         if not found:
@@ -70,14 +82,14 @@ def add_to_cart(product_id):
                 "id": product.id,
                 "name": product.name,
                 "price": product.price,
-                "quantity": quantity,
-                "stock": product.stock  # <- This is required
+                "quantity": min(quantity, product.stock),
+                "stock": product.stock,
+                "image": product.image
             })
 
     session['cart'] = cart
     session.modified = True
     return redirect(url_for('shop'))
-
 
 @app.route('/cart')
 def view_cart():
@@ -100,10 +112,12 @@ def update_cart(product_id):
         quantity = int(request.form.get('quantity', 1))
     except ValueError:
         quantity = 1
+
     for item in cart:
         if item["id"] == product_id:
             item["quantity"] = min(quantity, item["stock"])
             break
+
     session['cart'] = cart
     session.modified = True
     return redirect(url_for('view_cart'))
@@ -171,11 +185,12 @@ def add_product():
         category = request.form['category']
         stock = int(request.form['stock'])
 
-        file = request.files['image']
-        if file:
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file = request.files.get('image')
+        if file and file.filename != '':
+            filename = file.filename
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(image_path)
-            image = "uploads/" + file.filename
+            image = filename
         else:
             image = "default.jpg"
 
@@ -191,7 +206,7 @@ def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     try:
         if product.image and product.image != "default.jpg":
-            image_path = os.path.join(app.root_path, 'static', product.image)
+            image_path = os.path.join(app.root_path, 'static', 'uploads', product.image)
             if os.path.exists(image_path):
                 os.remove(image_path)
     except Exception as e:

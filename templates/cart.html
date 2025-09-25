@@ -21,6 +21,11 @@
                     <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.stock }}" style="width:50px; text-align:center;">
                     <button type="submit" style="padding:4px 8px;">Update</button>
                 </form>
+                <div style="color: red; font-size: 12px;">
+                    {% if item.quantity > item.stock %}
+                        Only {{ item.stock }} left in stock!
+                    {% endif %}
+                </div>
                 {% else %}
                     <span style="color:red; font-weight:bold;">Out of Stock</span>
                 {% endif %}
