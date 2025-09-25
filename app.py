@@ -161,15 +161,6 @@ def payment():
 
     return render_template("payment.html", cart=cart, total=total)
 
-# ---------------- Other Pages ----------------
-@app.route('/about')
-def about():
-    return render_template('about.html')
-
-@app.route('/contact')
-def contact():
-    return render_template('contact.html')
-
 # ---------------- Admin Routes ----------------
 @app.route('/admin')
 def admin_dashboard():
@@ -185,8 +176,8 @@ def add_product():
         category = request.form['category']
         stock = int(request.form['stock'])
 
-        file = request.files.get('image')
-        if file and file.filename != '':
+        file = request.files['image']
+        if file and file.filename != "":
             filename = file.filename
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(image_path)
